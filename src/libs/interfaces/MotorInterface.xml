@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE interface SYSTEM "interface.dtd">
+<interface name="MotorInterface" author="Martin Liebenberg, Tim Niemueller" year="2007">
+  <constants>
+    <constant type="uint32" name="MOTOR_ENABLED" value="0">
+      Motor is enabled and sending drive commands will make the robot move.
+    </constant>
+    <constant type="uint32" name="MOTOR_DISABLED" value="1">
+      Motor is disabled. Sending of drive commands is accepted but the robot will NOT
+      move.
+    </constant>
+    <constant type="uint32" name="DRIVE_MODE_RPM" value="1">
+      Motor drives in DriveRPM mode.
+    </constant>
+    <constant type="uint32" name="DRIVE_MODE_TRANS" value="2">
+      Motor drives in Trans mode.
+    </constant>
+    <constant type="uint32" name="DRIVE_MODE_ROT" value="3">
+      Motor drives in Rot mode.
+    </constant>
+    <constant type="uint32" name="DRIVE_MODE_TRANS_ROT" value="4">
+      Motor drives in TransRot mode.
+    </constant>
+    <constant type="uint32" name="DRIVE_MODE_ORBIT" value="5">
+      Motor drives in Orbit mode.
+    </constant>
+    <constant type="uint32" name="DRIVE_MODE_LINE_TRANS_ROT" value="6">
+      Motor drives in LinTransRot mode.
+    </constant>
+  </constants>
+  <data>
+    <comment>This interface is currently prepared best for a holonomic robot.
+      It will need modifications or a split to support differential drives.
+    </comment>
+    <field type="uint32" name="motor_state">
+      The current state of the motor.
+    </field>
+    <field type="uint32" name="drive_mode">
+      The current drive mode of the motor.
+    </field>
+    <field type="int32" name="right_rpm">
+      RPM of the motor on the right front of the robot.
+    </field>
+    <field type="int32" name="rear_rpm">
+      RPM of motor on the rear of the robot.
+    </field>
+    <field type="int32" name="left_rpm">
+      RPM of the motor on the left front of the robot.
+    </field>
+    <field type="float" name="odometry_path_length">
+      The actual length of the robot's trajectory since the last ResetOdometry.
+    </field>
+    <field type="float" name="odometry_position_x">
+      The actual position of the robot relative to the position at the last ResetOdometry.
+    </field>
+    <field type="float" name="odometry_position_y">
+      The actual position of the robot relative to the position at the last ResetOdometry.
+    </field>
+    <field type="float" name="odometry_orientation">
+      The actual orientation of the robot relative to the orientation at the last ResetOdometry.
+    </field>
+    <field type="float" name="vx">
+      VX of the robot in m/s. Forward.
+    </field>
+    <field type="float" name="vy">
+      VY of the robot in m/s. Left.
+    </field>
+    <field type="float" name="omega">
+      Rotation speed of the robot in rad/s.
+    </field>
+    <field type="float" name="des_vx">
+      Desired VX of the robot in m/s. Forward.
+    </field>
+    <field type="float" name="des_vy">
+      Desired VY of the robot in m/s. Left.
+    </field>
+    <field type="float" name="des_omega">
+      Desired Rotation speed of the robot in rad/s.
+    </field>
+    <field type="uint32" name="controller">
+     The ID of the controller. The controller ID is the instance serial of the sending
+     interface. Only from this interface instance command messages are accepted.
+    </field>
+    <field type="string" length="64" name="controller_thread_name">
+     The name of the controlling thread, for easier debugging. This is informative only
+     and actually two threads may share an interface instance (although this should be
+     avoided since the interface locking has to be reproduced for these threads then).
+  </field>
+  </data>
+  <message name="SetMotorState">
+    <comment>Sets the current motor state.</comment>
+    <field type="uint32" name="motor_state">
+      The new motor state to set. Use the MOTOR_* constants.
+    </field>
+  </message>
+  <message name="AcquireControl">
+    <comment>This allows any thread to aquire the control over the motor thread.
+      Use with extreme care!</comment>
+    <ref>controller</ref>
+    <ref>controller_thread_name</ref>
+  </message>
+  <message name="ResetOdometry">
+    <comment>Resets the the odometry. It sets OdometryDistance, OdometryPositionX,
+      OdometryPositionY and OdometryOrientation to zero.</comment>
+  </message>
+  <message name="SetOdometry">
+    <comment>Sets the odometry. It sets OdometeyPositionX,OdometryPositionY and OdometryOrientation based on given translation and new OdometryOrientation.</comment>
+    <field type="float" name="x">Translation in x direction in m</field>
+    <field type="float" name="y">Translation in y direction in m</field>
+    <field type="float" name="odometry_orientation">OdometryOrientation in m</field>
+  </message>
+  <message name="DriveRPM">
+    <comment>Directly set RPM, used for debugging, only use if you know what
+             you are doing. Usage is discouraged.</comment>
+    <field type="float" name="front_right">Rotation in RPM of the right front wheel.</field>
+    <field type="float" name="front_left">Rotation in RPM of the left front wheel.</field>
+    <field type="float" name="rear">Rotation in RPM of the rear wheel.</field>
+  </message>
+  <message name="Goto">
+    <comment>Translate and rotate the robot to the given relative position. The
+      provider may choose to translate this message into a TransRotMessage and
+      process it accordingly.</comment>
+    <field type="float" name="x">X distance in m.</field>
+    <field type="float" name="y">Y distance in m.</field>
+    <field type="float" name="phi">Angle relative to current angle in rad.</field>
+    <field type="float" name="time_sec">When to reach the desired location.</field>
+  </message>
+  <message name="Trans">
+    <comment>Translate the robot by the given velocities in X/Y direction.</comment>
+    <field type="float" name="vx">Speed in X direction in m/s.</field>
+    <field type="float" name="vy">Speed in Y direction in m/s.</field>
+  </message>
+  <message name="Rot">
+    <comment>Rotate the robot by the given angle speed in rad/s (positive right).</comment>
+    <field type="float" name="omega">Angle rotation in rad/s.</field>
+  </message>
+  <message name="TransRot">
+    <comment>Translate and rotate the robot at the same time. This is the same as combining a
+             Trans and a Rot message separately. Note that the robot will not drive on a line
+             with VX/VY and then rotate by Omega. Instead the movements are superpositioned
+             which will result in a curve. Use LinTransRot if you want this behaviour.</comment>
+    <field type="float" name="vx">Speed in X direction in m/s.</field>
+    <field type="float" name="vy">Speed in Y direction in m/s.</field>
+    <field type="float" name="omega">Angle rotation in rad/s.</field>
+  </message>
+  <message name="Orbit">
+    <comment>Orbit around a point. This will make the robot move in a circle around the given
+             point (PX, PY) with the angular speed Omega. With Orbit the robot will not
+             change its orientation and thus it will not focus on the point.</comment>
+    <field type="float" name="px">Point's X coordinate to orbit.</field>
+    <field type="float" name="py">Point's Y coordinate to orbit.</field>
+    <field type="float" name="omega">Angular speed around point in rad/s.</field>
+  </message>
+  <message name="LinTransRot">
+    <comment>Move along a line with given speed VX/VY and rotate the robot with Omega.</comment>
+    <field type="float" name="vx">Speed for translation in X direction in m/s.</field>
+    <field type="float" name="vy">Speed for translation in Y direction in m/s.</field>
+    <field type="float" name="omega">Rotational speed in rad/s.</field>
+  </message>
+  <!-- needs sensor feedback, delayed
+  <message name="OrbitRot">
+    <comment>Orbit around a point and rotate the robot whilst doing so. This is
+             the superpositioned movement of Orbit and Rot, while the orbiting is
+       recalculated to make a circle and take the changed rotation into account.</comment>
+    <field type="float" name="px">Point's X coordinate to orbit.</field>
+    <field type="float" name="py">Point's Y coordinate to orbit.</field>
+    <field type="float" name="omega_orbit">Angular speed around point in rad/s.</field>
+    <field type="float" name="omega_rot">Angular speed of the robot's rotation in rad/s.</field>
+  </message>
+  <message name="TransOrbit">
+    <comment>Translate with the given speed and keep looking at the given point.</comment>
+    <field type="float" name="vx">Speed for translation in X direction in m/s.</field>
+    <field type="float" name="vy">Speed for translation in Y direction in m/s.</field>
+    <field type="float" name="px">Point's X coordinate to focus.</field>
+    <field type="float" name="py">Point's Y coordinate to focus.</field>
+  </message>
+  --><!-- maby name TransOrbit TransAim -->
+</interface>

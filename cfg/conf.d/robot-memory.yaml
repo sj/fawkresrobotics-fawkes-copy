@@ -1,0 +1,30 @@
+%YAML 1.2
+%TAG ! tag:fawkesrobotics.org,cfg/
+---
+doc-url: !url http://trac.fawkesrobotics.org/wiki/Plugins/robot-memory
+---
+plugins/robot-memory:
+
+  database: robmem
+  default-collection: "robmem.test"
+  interface-name: "memory"
+  more-debug-output: false
+  blackboard-collection: "robmem.bb"
+  coordination:
+    database: robmem_coordination
+    mutex-collection: mutex
+
+  # databases with these name are stored in the distrited mongod
+  # instance and not in the local one:
+  distributed-db-names: ["syncedrobmem", "robmem_coordination"]
+
+  startup-grace-period: 30
+
+  computables:
+    blackboard:
+      priority: 10
+      caching-time: 0.3
+    transform:
+      collections: ['robmem.blackboard','robmem.transform','robmem.test']
+      priority: -10
+      caching-time: 0.3

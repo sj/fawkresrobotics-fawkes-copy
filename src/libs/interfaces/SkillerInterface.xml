@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE interface SYSTEM "interface.dtd">
+<interface name="SkillerInterface" author="Tim Niemueller" year="2008">
+  <constants>
+    <enum name="SkillStatusEnum">
+      <comment>
+	This determines the current status of skill execution.
+      </comment>
+      <item name="S_INACTIVE">No skill is running.</item>
+      <item name="S_FINAL">The skill string has been successfully processed.</item>
+      <item name="S_RUNNING">The execution is still running.</item>
+      <item name="S_FAILED">The execution failed and cannot succeed anymore.</item>
+    </enum>
+  </constants>
+  <data>
+    <comment>
+      The interface provides access to the skill execution runtime plugin.
+      It provides basic status information about skiller and allows for
+      calling skills via messages. It can also be used to manually restart
+      the Lua interpreter if something is wedged.
+    </comment>
+    <field type="string" length="1024" name="skill_string">
+      Currently executed skill string, at least the first 1023 bytes of it.
+      Must be properly null-terminated.
+    </field>
+    <field type="string" length="128" name="error">
+      String describing the error. Can be set by a skill when it fails.
+    </field>
+    <field type="uint32" name="exclusive_controller">
+      Instance serial of the exclusive controller of the skiller. If this does not
+      carry your instance serial your exec messages will be ignored. Aquire control with
+      the AquireControlMessage. Make sure you release control before exiting.
+    </field>
+    <field type="uint32" name="msgid">
+      The ID of the message that is currently being processed,
+      or 0 if no message is being processed.
+    </field>
+    <field type="SkillStatusEnum" name="status">
+      The status of the current skill execution.
+    </field>
+  </data>
+  <message name="ExecSkill">
+    <comment>
+      Sets the skill string and orders execution of this skill string.
+      Execution stops on success or failure of execution, if another
+      skill is commanded, or if a StopExecMessage is received.
+    </comment>
+    <ref>skill_string</ref>
+  </message>
+  <message name="RestartInterpreter">
+    <comment>Restart the Lua interpreter.</comment>
+  </message>
+  <message name="StopExec">
+    <comment>Stops the execution of a continuous skill.</comment>
+  </message>
+  <message name="AcquireControl">
+    <comment>Aquires exclusive control over the skiller. The used ID is the
+      instance serial of the interface where this message was
+    enqueued.</comment>
+    <field type="bool" name="steal_control">
+      If set to true steal the control from someone else who has it
+      atm. Use this with caution. But sometimes it is necessary to
+      ensure a successful operation, e.g. if the agent tries to
+      acquire control.
+    </field>
+  </message>
+  <message name="ReleaseControl">
+    <comment>Releases previously aquired exclusive control.</comment>
+  </message>
+</interface>
+

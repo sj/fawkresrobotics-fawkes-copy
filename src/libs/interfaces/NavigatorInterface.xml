@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE interface SYSTEM "interface.dtd">
+<interface name="NavigatorInterface" author="Martin Liebenberg, Daniel Beck, Tim Niemueller" year="2007-2009">
+  <constants>
+    <!-- Note that since these flags are bit-wise OR'ed the values must be chosen such that
+   the equation f = 2^n holds, for f being the flag value and n a natural number. -->
+    <constant type="uint32" value="0" name="ERROR_NONE">No error.</constant>
+    <constant type="uint32" value="1" name="ERROR_MOTOR">Cannot
+      communicate with motor.</constant>
+    <constant type="uint32" value="2" name="ERROR_OBSTRUCTION">
+      Target cannot be reached, something is standing in the way.
+    </constant>
+    <constant type="uint32" value="4" name="ERROR_UNKNOWN_PLACE">
+      The last GotoPlaceMessages could not be processed as the given
+      place is unknown.
+    </constant>
+    <constant type="uint32" value="8" name="ERROR_PATH_GEN_FAIL">
+      Failed to generate path to goal.
+    </constant>
+
+    <!-- Note that since these flags are bit-wise OR'ed the values must be chosen such that
+   the equation f = 2^n holds, for f being the flag value and n a natural number. -->
+    <constant type="uint32" value="0" name="FLAG_NONE">No flags set.</constant>
+    <constant type="uint32" value="1" name="FLAG_CART_GOTO">
+      Navigator component supports cartesian goto commands.
+    </constant>
+    <constant type="uint32" value="2" name="FLAG_POLAR_GOTO">
+      Navigator component supports polar goto commands.
+    </constant>
+    <constant type="uint32" value="4" name="FLAG_PLACE_GOTO">
+      Navigator components supports place goto messages. Know places
+      have to be communicated out of band.
+    </constant>
+    <constant type="uint32" value="8" name="FLAG_UPDATES_DEST_DIST">
+      Navigator component updates dest_dist field with destination to
+      target while moving.
+    </constant>
+    <constant type="uint32" value="16" name="FLAG_SECURITY_DISTANCE">
+      Security distance can be set at run-time.
+    </constant>
+    <constant type="uint32" value="32" name="FLAG_ESCAPING">
+      Navigator component supports escaping which can be enabled and disabled.
+    </constant>
+   <enum name="DriveMode">
+     <comment>Drive modes enum</comment>
+     <item name="MovingNotAllowed">Moving not allowed constant</item>
+     <item name="Forward">Moving forward constant</item>
+     <item name="AllowBackward">Moving allow backward constant</item>
+     <item name="Backward">Moving backward constant</item>
+     <item name="ESCAPE">Escape constant</item>
+  </enum> 
+  <enum name="OrientationMode">
+     <comment>Orientation mode enum</comment>
+     <item name="OrientAtTarget">Orient when at target, if orientation is given</item> 
+     <item name="OrientDuringTravel">Orient during travel BUT NOT at target, if omnidirectional platform and orientation is given</item> 
+  </enum> 
+  </constants>
+  <data>
+    <comment>
+      The navigator interface is used by the navigator to export information about
+      the current status of the navigator and to define all messages by which the navigator
+      can be instructed.
+
+      There are three coordinate systems, the robot system which is a right-handed cartesian
+      coordinate system with the robot in its origin, X axis pointing forward, Y pointing to
+      the left and Z pointing upwards. The second coordinate system is the so-called
+      navigator system. It is a coordinate system similar to the robot system, but the
+      origin is defined on the initialization of the navigator. The last system is the
+      odometry system. It is again a similar system, but the origin is reset from time
+      to time and the robot's position in this system gives the odometry deltas.
+    </comment>
+
+    <field type="uint32" name="flags">Bit-wise combination of
+    FLAG_* constants denoting navigator component features.</field>
+
+    <field type="float" name="x">Current X-coordinate in the navigator coordinate system.</field>
+    <field type="float" name="y">Current Y-coordinate in the navigator coordinate system.</field>
+
+    <field type="float" name="dest_x">X-coordinate of the current destination, or 0.0 if no target has been set.</field>
+    <field type="float" name="dest_y">Y-coordinate of the current destination, or 0.0 if no target has been set.</field>
+    <field type="float" name="dest_ori">Orientation of the current destination, or 0.0 if no target has been set.</field>
+
+    <field type="float" name="dest_dist">Distance to destination in m.</field>
+
+    <field type="uint32" name="msgid">The ID of the message that is currently being
+      processed, or 0 if no message is being processed.</field>
+    <field type="bool" name="final">True, if the last goto command has been finished,
+      false if it is still running</field>
+    <field type="uint32" name="error_code">Failure code set if
+    final is true. 0 if no error occured, an error code from ERROR_*
+    constants otherwise (or a bit-wise combination).</field>
+
+    <field type="float" name="max_velocity">Maximum velocity</field>
+    <field type="float" name="max_rotation">Maximum rotation velocity</field>
+    <field type="float" name="security_distance">Security distance to keep to obstacles</field>
+    <field type="bool" name="escaping_enabled">This is used for navigation components with integrated collision avoidance,
+      to check whether the navigator should stop when an obstacle obstructs the path, or if it should escape.</field>
+
+    <field type="DriveMode" name="drive_mode">Current drive mode</field>
+    <field type="bool" name="auto_drive_mode">True, if the drive mode should be automatically decided each time.
+      False, if the drive mode should not automatically change, which is the case when sending
+      a SetAutoDriveMode-message (otherwise the navigator might ignore that value).</field>
+
+    <field type="bool" name="stop_at_target">Stop when target is reached?</field>
+    <field type="OrientationMode" name="orientation_mode">Mode how/when to orientate if orientation is given</field>
+    <field type="string" length="64" name="target_frame">The target frame to plan into</field>
+  </data>
+  <message name="Stop">
+    <comment>Stop motion immediately.</comment>
+    <field type="uint32" name="msgid">
+	    If zero, stops any motion. If non-zero, the component shall only
+	    stop the motion if the currently executed command was received
+	    through a message with that specific ID.
+
+	    Use the specific version whenever possible. It avoids a race
+	    condition if one intstructing component sends a stop, and
+	    another a new drive command at the same time.
+    </field>
+  </message>
+  <message name="Turn">
+    <comment>Turn around own major axis. Opposed to setting a goto with a target
+    angle this message causes the robot to turn exactly by this angle, it will
+    not normalize it and turn to a specified angle.</comment>
+    <field type="float" name="angle">Angle of the turn.</field>
+    <field type="float" name="velocity">The desired turning velocity in rad/s,
+      set to zero to use default value.</field>
+  </message>
+  <message name="CartesianGoto">
+    <comment>States the next target to navigate to.</comment>
+    <field type="float" name="x">X-coordinate of the target, in the robot's coordinate system.</field>
+    <field type="float" name="y">Y-coordinate of the target, in the robot's coordinate system.</field>
+    <field type="float" name="orientation">The desired orientation of the robot at the target.</field>
+  </message>
+  <message name="CartesianGotoWithFrame">
+    <comment>States the next target to navigate to.</comment>
+    <field type="float" name="x">X-coordinate of the target, in the robot's coordinate system.</field>
+    <field type="float" name="y">Y-coordinate of the target, in the robot's coordinate system.</field>
+    <field type="float" name="orientation">The desired orientation of the robot at the target.</field>
+    <field type="string" length="64" name="target_frame">The target frame to plan in.</field>
+  </message>
+  <message name="PolarGoto">
+    <comment>States the next target to navigate to.</comment>
+    <field type="float" name="phi">Angle between the robot's front and the target.</field>
+    <field type="float" name="dist">Distance to the target.</field>
+    <field type="float" name="orientation">The desired orientation of the robot at the target.</field>
+  </message>
+  <message name="PlaceGoto">
+    <comment>States the next target to navigate to.</comment>
+    <field type="string" length="64" name="place">Place to go to.</field>
+  </message>
+  <message name="PlaceWithOriGoto">
+    <comment>States the next target to navigate to.</comment>
+    <field type="string" length="64" name="place">Place to go to.</field>
+    <field type="float" name="orientation">The desired orientation of the robot at the target.</field>
+  </message>
+  <message name="Obstacle">
+    <comment>Adds an obstacle within the scan area. It's just for the Navigator GUI.</comment>
+    <field type="float" name="x">X-coordinate of the obstacle.</field>
+    <field type="float" name="y">Y-coordinate of the obstacle.</field>
+    <field type="float" name="width">Width of the obstacle.</field>
+  </message>
+  <message name="ResetOdometry">
+    <comment>Resets the origin of the odometry system</comment>
+  </message>
+  <message name="SetMaxVelocity">
+    <comment>States the maximum velocity of the robot for driving/walking, but not for turning.</comment>
+    <ref>max_velocity</ref>
+  </message>
+  <message name="SetMaxRotation">
+    <comment>States the maximum velocity of the robot for rotating/turning.</comment>
+    <ref>max_rotation</ref>
+  </message>
+  <message name="SetEscaping">
+    <comment>Sets if escaping is allowed (true) or not (false).</comment>
+    <ref>escaping_enabled</ref>
+  </message>
+  <message name="SetSecurityDistance">
+    <comment>Sets the desired security distance (in meters) for collision avoidance.</comment>
+    <ref>security_distance</ref>
+  </message>
+  <message name="SetDriveMode">
+    <comment>Sets the desired drive modefor collision avoidance.</comment>
+    <ref>drive_mode</ref>
+  </message>
+  <message name="SetStopAtTarget">
+    <comment>Decide if robot should explicily stop when the target is reached.</comment>
+    <ref>stop_at_target</ref>
+  </message>
+    <message name="SetOrientationMode">
+    <comment>Decide how/when the robot should orientate if orientation is given</comment>
+    <ref>orientation_mode</ref>
+  </message>
+  <message name="ResetParameters">
+    <comment>Reset the settable parameters to default values.</comment>
+  </message>
+</interface>

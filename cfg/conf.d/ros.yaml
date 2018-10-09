@@ -1,0 +1,53 @@
+%YAML 1.2
+%TAG ! tag:fawkesrobotics.org,cfg/
+---
+doc-url: !url http://trac.fawkesrobotics.org/wiki/Plugins/ros
+---
+ros:
+  # Set a custom node name, for example if multiple fawkes instances
+  # share the same roscore. Set to special value $HOSTNAME to use short
+  # hostname. Examples:
+  # node-name: tims_fawkes
+  # node-name: $HOSTNAME
+
+  # Spin the ROS main loop asynchronously from the Fawkes main loop?
+  # Synchronous is preferred. But this will block the ROSNodeThread for
+  # example for long running service calls (where a Fawkes plugin provides
+  # the service, since it is executed in the thread).
+  async-spinning: true
+
+  # Number of threads for asynchronous spinning
+  async-num-threads: 4
+
+  cmdvel:
+    # Set motor interface to write to
+    motor_interface_id: Robotino
+
+  odometry:
+    # Motor interface to read odometry from
+    motor_interface_id: Robotino
+    # Frame IDs
+    odom_frame_id: !frame odom
+    base_frame_id: !frame base_link
+
+  clock:
+    # Frequency in Hz at which the clock should be published
+    frequency: 100
+
+  pcl:
+    # The time interval which is used to search for new pointclouds in ROS.
+    # This is the maximum time until a pointcloud from ROS is visible and usable in FAWKES
+    ros-search-interval: 2.
+
+  tf:
+    # Use tf2 for communication with ROS.
+    # This means using the tf2_msgs message types and publishing
+    # static transforms to /tf_static.
+    use_tf2: true
+
+    # Interval in which to post static transform updates; sec
+    # This setting is only relevant is use_tf2 is set to false above.
+    static-update-interval: 1.0
+
+  navgraph-breakout:
+    action-topic: place_goto

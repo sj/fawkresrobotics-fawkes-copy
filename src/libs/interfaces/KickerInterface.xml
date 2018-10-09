@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE interface SYSTEM "interface.dtd">
+<interface name="KickerInterface" author="Daniel Beck" year="2007">
+  <constants>
+    <enum name="GuideBallSideEnum">
+      <comment>
+        Enumeration defining on which side of the robot the ball shall be
+        guided (and thus on which side the arm is to be erected).
+      </comment>
+      <item name="GUIDE_BALL_LEFT">
+        Constant defining that the kicker shall activate the ball guidance device
+        in such a way that the left arm is erected.
+      </item>
+      <item name="GUIDE_BALL_RIGHT">
+        Constant defining that the kicker shall activate the ball guidance device
+        in such a way that the right arm is erected.
+      </item>
+    </enum>
+  </constants>
+  <data>
+    <comment>
+      In these variables it is stored how often the right, center or 
+      left kick have been triggered.
+    </comment>
+    <field type="int32" name="num_kicks_left">
+      Number of Left-Kicks
+    </field>
+    <field type="int32" name="num_kicks_center">
+      Number of Center-Kicks
+    </field>
+    <field type="int32" name="num_kicks_right">
+      Number of Right-Kicks
+    </field>
+    <field type="GuideBallSideEnum" name="guide_ball_side">Side where the ball
+      guidance arm is currently erected.</field>
+    <field type="uint32" name="current_intensity">
+      The currently set intensity.
+    </field>
+  </data>
+  <message name="Kick">
+    <comment>Triggers a kick with the given parameters.</comment>
+    <field type="bool" name="left">True to kick with left kicker.</field>
+    <field type="bool" name="center">True to kick with central kicker.</field>
+    <field type="bool" name="right">True to kick with right kicker.</field>
+    <field type="uint32" name="intensity">Intensity in the range [0..255].</field>
+  </message>
+  <message name="ResetCounter">
+    <comment>Reset the internal counter for number of kicks</comment>
+  </message>
+  <message name="GuideBall">
+    <comment>Order change in ball guidance</comment>
+    <field type="GuideBallSideEnum" name="guide_ball_side">Side where to guide the ball and erect the arm.</field>
+  </message>
+</interface>
+

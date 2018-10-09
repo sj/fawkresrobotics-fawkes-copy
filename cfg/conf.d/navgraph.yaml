@@ -1,0 +1,114 @@
+%YAML 1.2
+%TAG ! tag:fawkesrobotics.org,cfg/
+---
+doc-url: !url http://trac.fawkesrobotics.org/wiki/Plugins/navgraph
+---
+navgraph:
+
+  # Blackboard interface ID for navigator interface of locomotion component
+  navigator_interface_id: Navigator
+
+  # Graph file to use for path planning
+  graph_file: example.yaml
+
+  # Interval in which the resend the goto command; sec
+  resend_interval: 1.0
+
+  # Interval in which to replan if constraints have been modified
+  # since the last path planning.
+  replan_interval: 2.0
+
+  # Cost factor to decide whether to use new or old plan after re-planning.
+  # The cost of the old (remaining partial) plan is multiplied with this
+  # factor and then compared to the new plan's cost. Only if the new plan
+  # is not more expensive than this result, it is used.
+  # For example, when setting this to 1.0, the new plan is only considered
+  # if it is at most as expensive as the current plan. When setting this to
+  # 2.0, the new plan may be up to twice as expensive as the current plan
+  # to switch.
+  replan_cost_factor: 1.5
+
+  # Update the visualization at this interval. This will trigger a compuation
+  # of all constraints and if any change occurs the graph will be published
+  # again. This is done whether the robot is currently driving or standing still.
+  visualization_interval: 0.5
+
+  # Time to keep moving after the target tolerance has been reached; sec
+  # NOTE: it is recommended to set this as graph default property
+  target_time: 2.5
+
+  # Time to keep moving after the orientation tolerance has been reached; sec
+  # NOTE: it is recommended to set this as graph default property
+  target_ori_time: 2.5
+
+  # If set to true, aborts traveling on error, e.g. if no writer exists for
+  # the NavigatorInterface. If false, keeps trying and re-sending.
+  # Setting this to false is risky, because skills then cannot react to an
+  # error because none is reported. It is recommended to set this to false
+  # only if you really know what you are doing.
+  abort_on_error: true
+
+  # Allow that there are multiple graph segments without interconnect.
+  # This can also be useful, for example, if there are explicitly unconnected
+  # nodes in the graph, for example to store semantic information but which
+  # need not be traveled to.
+  # This flag is used during loading the graph_file initially, only.
+  allow_multi_graph: false
+
+  # Monitor graph file and automatically reload on changes?
+  monitor_file: true
+
+  # Write graph information to log on (re-)loading?
+  log_graph: false
+
+  # The following enables or disables path execution.
+  # In either case a navgraph is maintained internally, paths may be
+  # planned, and searches performed. However, if disabled, paths may
+  # not be executed by the navgraph plugin. This can be useful, for
+  # example, to keep the navgraph data structure around and use
+  # ros-navgraph-breakout for external execution. Disabling
+  # essentially means that no blackboard interfaces for path
+  # instruction will be provided and the remaining API is kept
+  # as-is.
+  path_execution: true
+
+  visualization:
+
+    # Set to true to enable visualization by publishing messages for rviz
+    enable: true
+
+    # The color for the cost factors (from constraints) of an edge is
+    # scaled from red over orange to yellow (from 0.0 to 1.0). The
+    # maximum scale value for the cost denotes when this should be
+    # saturated and thus yellow, i.e.  a setting of 2.0 means that a
+    # cost factor of 1.0 will be drawn as red, 1.5 as orange, and
+    # anything greater or equal to 2.0 as yellow.
+    cost_scale_max: 4.0
+
+  # navgraph-static-constraints plugin configuration
+  static-constraints:
+    # A list of names of nodes that should be statically blocked
+    nodes: ["P24"]
+    # Static edge blocks. Format is "OriginNode--TargetNode". Node names
+    # may not contain "--".
+    edges: ["P32--P33"]
+    # Static costs for specific edges. Format is
+    # OriginNode--TargetNode:cost (node names may not contain "--" or
+    # ":"). Use an empty list to not post any edge cost constraints.
+    edge-costs: ["P11--P21:1.5", "P12--P22:2.0", "P21--P22:1.75"]
+
+    # Static polygons for which all nodes within the polygons as well as
+    # all edges passing through or ending within the polygon are blocked.
+    # Specification is a string with /-separated points which are again
+    # :-separated X:Y coordinates, e.g. "p1.x:p1.y/p2.x/p2.y...".
+    # The polygons are automatically closed, i.e. if the last node is
+    # different from the first the first is automatically appended.
+    polygons: ["1.2:0.0/1.5:0.0/1.5:1.5/1.2:1.5"]
+
+  interactive:
+    out-file: navgraph-interactive-saved.yaml
+
+  # Publishing of usable data structures to ROS
+  ros-publishing:
+    enable: true
+

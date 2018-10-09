@@ -1,0 +1,299 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE interface SYSTEM "interface.dtd">
+<interface name="NavGraphGeneratorInterface" author="Tim Niemueller" year="2015-2017">
+  <constants>
+    <enum name="ConnectionMode">
+      <comment>Describe how to connect nodes to the graph.</comment>
+      <item name="NOT_CONNECTED">
+				The node is will not be initially connected.
+
+				The difference to UNCONNECTED is that we do not connect the
+				nodes just now, but will do so later, e.g. by adding
+				edges. Note that it is an error not to connect the node later.
+      </item>
+      <item name="UNCONNECTED">
+				The node is marked as unconnected and will not be connected to
+				another node. This kind of nodes is useful to mark points and
+				possibly assign properties without needing to travel to it.
+
+				The difference to NOT_CONNECTED is that the nodes will be
+				explicitly marked as not being connected and it is an error to
+				connect them.
+      </item>
+      <item name="CLOSEST_NODE">
+				Connect point to the node on the graph closest to the given
+				point.
+      </item>
+      <item name="CLOSEST_EDGE">
+				Connect point to the edge in which segment it lies, i.e. search
+				for an edge where we can find a perpendicular line going
+				through the given point and any point on the edge's line
+				segment. If no such segment is found, the point cannot be
+				added.
+      </item>
+      <item name="CLOSEST_EDGE_OR_NODE">
+				First try the CLOSEST_EDGE method. If that yields no result,
+				use the CLOSEST_NODE method as a fallback.
+      </item>
+    </enum> 
+    <enum name="FilterType">
+      <comment>Post-processing filtering type.</comment>
+      <item name="FILTER_EDGES_BY_MAP">
+				If enabled, filters out all edges after the map generation that
+				pass too close by an occupied cell of the map. Use this to get
+				rid of connections which "pass through walls".
+				Note that this step is done before adding points of interest.
+				Therefore edges going to POIs might still pass through or close
+				by occupied cells.
+
+				Parameters:
+				distance: minimum distance from edges to occupied map grid
+				cells to consider it safe.
+      </item>
+      <item name="FILTER_ORPHAN_NODES">
+				If enabled, filters out all nodes which are not connected to
+				any other node. These can occur, for example, after performing
+				the FILTER_EDGES_BY_MAP filter.
+      </item>
+      <item name="FILTER_MULTI_GRAPH">
+				Sometimes after applying other filters one can end up with
+				multiple disconnected graphs. Enabling this filter will keep
+				only the largest connected graph and simply remove all nodes
+				and edges from smaller graphs not connected to the largest.
+      </item>
+    </enum>
+    <enum name="EdgeMode">
+      <comment>
+				When adding edges, the mode defines how to add edges.
+      </comment>
+      <item name="NO_INTERSECTION">
+				Only insert edge if it does not intersect with any other
+				existing edge in the graph.
+      </item>
+      <item name="SPLIT_INTERSECTION">
+				If the new edge intersects with one or more edges, add new
+				points at the intersections and split the edges for this
+				point.
+      </item>
+      <item name="FORCE">
+				The edge is added as-is, it may overlap or intersect with
+				other edges.
+      </item>
+    </enum> 
+    <enum name="Algorithm">
+      <comment>
+				Available generator algorithms.
+      </comment>
+      <item name="ALGORITHM_VORONOI">
+	      Voronoi-based algorithm for navgraph generation.
+	      This is the default if no algorithm is set.
+      </item>
+      <item name="ALGORITHM_GRID">
+	      Grid-based algorithm with customizable spacing.
+
+	      Parameters:
+	      - spacing: the grid spacing in meters
+	        (float, m, mandatory)
+	      - margin: the minimum distances of edges to obstacles
+	        (float, m, mandatory)
+	      - add-diagonals: enable adding of diagonal edges in grid cells
+	        (bool, optional, default: false)
+      </item>
+    </enum> 
+  </constants>
+  <data>
+    <comment>
+      This interfaces is used to instruct the navgraph-generator.
+      It allows to add obstacles and points of interest and perform
+      a computation run of the graph generation.
+
+      Operations to modify the parameters (clearing, adding/removing
+      obstacles or points of interest etc.) take effect only once a
+      ComputeMessage is sent. This can be used, for example, to first
+      clear the graph, update it with the latest information, and
+      finally generate the graph.
+
+      As soon as any instruction has been received, the generato shall
+      only listen to messages from the same sender. Only after a
+      computation has been performed can another node send messages
+      again.
+    </comment>
+
+    <field type="uint32" name="msgid">
+      The ID of the message that is currently being processed or
+      was processed last.
+    </field>
+    <field type="bool" name="final">
+      True, if the last generation triggered by a ComputeMessage has
+      been completed, false if it is still running. Also check the
+      msgid field if this field applies to the correct message.
+    </field>
+    <field type="bool" name="ok">
+	    Indicate success (true) or failure (false) of the most recent
+	    navgraph generation (valid if final equals true).
+    </field>
+    <field type="string" name="error_message" length="128">
+	    If the "ok" field is false, may give an additional clue about
+	    the encountered error.
+    </field>
+  </data>
+  <message name="Clear">
+    <comment>
+      Remove all currently know obstacles.
+      Use this operation with care. A graph generation afterwards will
+      yield now results.
+    </comment>
+  </message>
+  <message name="SetAlgorithm">
+    <comment>Set algorithm used to generate graph.</comment>
+    <field type="Algorithm" name="algorithm">Algorithm to use.</field>
+  </message>
+  <message name="SetAlgorithmParameter">
+    <comment>Set algorithm-specific parameter.</comment>
+    <field type="string" name="param" length="32">Parameter name, see
+    Algorithm enum description for algorithm-specific
+    parameters. Unknown parameters will be ignored.</field>
+    <field type="string" name="value" length="64">Value of parameter
+    encoded as string. The algorithm will perform the conversion to
+    the required data type (e.g., float). An error will make the
+    generation fail.</field>
+  </message>
+  <message name="SetBoundingBox">
+    <comment>
+      Set the bounding box to use for graph generation. No edge that
+      leads outside this bounding box is considered for the graph.
+    </comment>
+    <field type="float" name="p1_x">X coordinate of bbox start point in global frame.</field>
+    <field type="float" name="p1_y">Y coordinate of bbox start point in global frame.</field>
+    <field type="float" name="p2_x">X coordinate of bbox end point in global frame.</field>
+    <field type="float" name="p2_y">Y coordinate of bbox end point in global frame.</field>
+  </message>
+  <message name="SetFilter">
+    <comment>Enable or disable a post-processing filter.</comment>
+    <field type="FilterType" name="filter">Which filter to
+    enable/disable.</field>
+    <field type="bool" name="enable">True to enable, false to
+    disable</field>
+  </message>
+  <message name="SetFilterParamFloat">
+    <comment>Enable or disable a post-processing filter.</comment>
+    <field type="FilterType" name="filter">Which filter to
+    enable/disable.</field>
+    <field type="string" name="param" length="32">Parameter name, see FilterType
+    description for possible values.</field>
+    <field type="float" name="value">True to enable, false to
+    disable</field>
+  </message>
+  <message name="AddMapObstacles">
+    <comment>
+      Calculate useful obstacle points from the currently configured map.
+    </comment>
+    <field type="float" name="max_line_point_distance">
+      For points generated on lines found in the map, do not exceed
+      this threshold in terms of maximum distance of points on line.
+    </field>
+  </message>
+  <message name="AddObstacle">
+    <comment>
+      Add an obstacle to be avoided by the graph. The obstacle is
+      given as a centroid in X-Y ground-support plane of global frame,
+      typical /map frame.
+    </comment>
+    <field type="string" name="name" length="64">
+      ID of the obstacle. Can later be used to remove it again.
+    </field>
+    <field type="float" name="x">X coordinate of obstacle in global frame.</field>
+    <field type="float" name="y">Y coordinate of obstacle in global frame.</field>
+  </message>
+  <message name="RemoveObstacle">
+    <comment></comment>
+    <field type="string" name="name" length="64">
+      ID of the obstacle to remove.
+    </field>    
+  </message>
+  <message name="AddPointOfInterest">
+    <comment>
+      Add a point which shall be reachable as a target. The POI is
+      given as a centroid in X-Y ground-support plane of global frame,
+      typical /map frame.
+    </comment>
+    <field type="string" name="name" length="64">
+      ID of the obstacle. Can later be used to remove it again.
+    </field>
+    <field type="float" name="x">X coordinate of obstacle in global frame.</field>
+    <field type="float" name="y">Y coordinate of obstacle in global frame.</field>
+    <field type="ConnectionMode" name="mode">
+      The connection mode to use to connect the POI with the graph.
+    </field>
+  </message>
+  <message name="AddPointOfInterestWithOri">
+    <comment>
+      Add a point which shall be reachable as a target. The POI is
+      given as a centroid in X-Y ground-support plane of global frame,
+      typical /map frame. This form also accepts a desired target
+      orientation for the point.
+    </comment>
+    <field type="string" name="name" length="64">
+      ID of the obstacle. Can later be used to remove it again.
+    </field>
+    <field type="float" name="x">X coordinate of obstacle in global frame.</field>
+    <field type="float" name="y">Y coordinate of obstacle in global frame.</field>
+    <field type="float" name="ori">Orientation for target point (rad).</field>
+    <field type="ConnectionMode" name="mode">
+      The connection mode to use to connect the POI with the graph.
+    </field>
+  </message>
+  <message name="SetPointOfInterestProperty">
+    <comment>
+      Set a property for an already added point of interest.
+    </comment>
+    <field type="string" name="name" length="64">
+      ID of the point of interest.
+    </field>
+    <field type="string" name="property_name" length="64">Name of the property to set.</field>
+    <field type="string" name="property_value" length="1024">Value of the property
+    to set.</field>
+  </message>
+  <message name="AddEdge">
+    <comment>
+      Add an edge between two points. Edges for which one of the end
+      points does not exist are silently ignored. The points are given
+      in the X-Y ground-support plane of global frame, typical /map
+      frame.
+    </comment>
+    <field type="string" name="p1" length="64">ID of first node.</field>
+    <field type="string" name="p2" length="64">ID of second node.</field>
+    <field type="bool" name="directed">
+      True to create a directed edge from p1 to p2, otherwise the edge
+      is assumed to be undirected.
+    </field>
+    <field type="EdgeMode" name="mode">The edge insertion mode.</field>
+  </message>
+  <message name="SetGraphDefaultProperty">
+    <comment>
+      Set a graph default property property.
+    </comment>
+    <field type="string" name="property_name" length="64">Name of the property to set.</field>
+    <field type="string" name="property_value" length="1024">Value of the property
+    to set.</field>
+  </message>
+  <message name="SetCopyGraphDefaultProperties">
+    <comment>
+      Set if the graph default properties should be copied from the
+      previous graph. This defaults to enabled and is reset on Clear.
+    </comment>
+    <field type="bool" name="enable_copy">True to enable copying
+    (default) false to disable).</field>
+  </message>
+  <message name="RemovePointOfInterest">
+    <comment>Remove a specific point of interest.</comment>
+    <field type="string" name="name" length="64">
+      ID of the obstacle to remove.
+    </field>    
+  </message>
+  <message name="Compute">
+    <comment>
+      Compute the graph with the currently available information.
+    </comment>
+  </message>
+</interface>

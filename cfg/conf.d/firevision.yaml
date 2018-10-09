@@ -1,0 +1,16 @@
+%YAML 1.2
+%TAG ! tag:fawkesrobotics.org,cfg/
+---
+doc-url: !url http://trac.fawkesrobotics.org/wiki/FireVision
+---
+# Fountain TCP Port; TCP port
+firevision:
+  fountain:
+    tcp_port: !tcp-port 2208
+
+  retriever:
+    camera:
+      cam0:
+        string: v4l2:firstcam:device=/dev/video0
+        frame: !frame base_link
+

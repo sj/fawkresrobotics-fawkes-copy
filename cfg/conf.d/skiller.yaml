@@ -1,0 +1,23 @@
+%YAML 1.2
+%TAG ! tag:fawkesrobotics.org,cfg/
+---
+doc-url: !url http://trac.fawkesrobotics.org/wiki/Plugins/skiller
+---
+skiller:
+  # Skill space
+  skillspace: test
+
+  # Watch lua files for modification and automatically reload
+  # Lua if files have been changed; true to enable
+  watch_files: true
+
+  # Feature-specific configuration
+  features:
+    
+    navgraph:
+      # Enable access to navgraph, adds a dependency on the navgraph
+      # plugin such that a valid graph must be loaded first
+      enable: false
+
+    ros:
+      enable: false

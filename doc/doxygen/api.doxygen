@@ -1,0 +1,6 @@
+
+# Configuration for full API doc generation
+
+@INCLUDE_PATH = doc/doxygen/parts
+@INCLUDE      = base.doxygen
+

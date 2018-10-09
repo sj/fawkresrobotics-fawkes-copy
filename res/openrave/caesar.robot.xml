@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Robot name="caesar">
+  <Translation>-0.0725 0 0.33</Translation>
+
+  <Robot prefix="arm_" file="neuronics-katana.zae" name="caesar_katana">
+     <Translation>0.0725 0 0.145</Translation>
+  </Robot>
+
+  <KinBody file="caesar2011.kinbody.xml">
+    <Joint name="dummy" type="hinge" enable="False">
+      <body>caesar_base</body>
+      <body>arm_Base</body>
+      <limits>0 0</limits>
+    </Joint>
+    <Joint name="dummy" type="hinge" enable="False">
+      <body>caesar_base</body>
+      <body>caesar_rack</body>
+      <limits>0 0</limits>
+    </Joint>
+  </KinBody>
+
+
+
+  <Manipulator name="arm_kni">
+    <effector>arm_Gripper_Base</effector>
+    <translation>0 0.1303 0</translation>
+    <base>arm_Base</base>
+    <joints>arm_gj1</joints>
+    <closingdirection>-1</closingdirection>
+ <!--   <iksolver>CaesarIKFast 0.01</iksolver> -->
+  </Manipulator>
+
+</Robot>

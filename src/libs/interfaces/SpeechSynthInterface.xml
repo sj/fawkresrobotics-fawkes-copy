@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE interface SYSTEM "interface.dtd">
+<interface name="SpeechSynthInterface" author="Tim Niemueller" year="2008">
+  <data>
+    <comment>
+      The interface provides access to a spech synthesizer facility.
+      On systems that support this feature strings can be ordered for
+      synthesis and audio output. Multiple messages ordering speech
+      should be enqueued and processed one after another by providers.
+    </comment>
+    <field type="string" length="1024" name="text">
+      Last spoken string. Must be properly null-terminated.
+    </field>
+    <field type="uint32" name="msgid">
+      The ID of the message that is currently being processed,
+      or 0 if no message is being processed.
+    </field>
+    <field type="bool" name="final">
+      True, if the last text has been spoken, false if it is still running.
+    </field>
+    <field type="float" name="duration">
+      Length in seconds that it takes to speek the current text, -1 if
+      unknown. This is the total duration of the current string, *not* the
+      duration of already spoken or yet to speak text!
+    </field>
+  </data>
+  <message name="Say">
+    <comment>Orders the given text to be spoken.</comment>
+    <ref>text</ref>
+  </message>
+</interface>

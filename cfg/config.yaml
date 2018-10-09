@@ -1,0 +1,44 @@
+%YAML 1.2
+%TAG ! tag:fawkesrobotics.org,cfg/
+---
+# Configuration meta information document
+include:
+  # reads files ending in .yaml from modules.d config subdir
+  - !ignore-missing conf.d/
+  # Reads the host-specific configuration file, no failure if missing
+  - !host-specific host.yaml
+---
+# Main configuration document
+
+fawkes:
+
+  # Main app relevant settings
+  mainapp:
+    # Size of BlackBoard memory segment; bytes
+    blackboard_size: 2097152
+    # Desired loop time of main thread, 0 to disable; microseconds
+    desired_loop_time: 33333
+
+    # Maximum time a thread may run per loop, 0 to disable; microseconds
+    max_thread_time: 66666
+
+    # Uncomment the following to get a debug log file each time you
+    # run fawkes independent of the log level.
+    #loggers: console;file/debug:debug.log
+
+    # Enable to redirect stderr to the log. If you have mis-behaving
+    # third-party code this can come in handy to keep records of what's
+    # going on for later analysis.
+    log_stderr_as_warn: true
+
+
+    # *** Network settings
+    # Moved to conf.d/network.yaml
+
+# Log level for ballposlog example plugin; sum of any of
+# debug=0, info=1, warn=2, error=4, none=8
+ballposlog/log_level: 0
+
+
+# More configuration values can be found in the files mentioned
+# above in the meta config document regarding includes.

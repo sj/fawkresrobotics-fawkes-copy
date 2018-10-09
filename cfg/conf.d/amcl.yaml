@@ -1,0 +1,180 @@
+%YAML 1.2
+%TAG ! tag:fawkesrobotics.org,cfg/
+---
+doc-url: !url http://trac.fawkesrobotics.org/wiki/Plugins/tabletop-objects
+---
+plugins/amcl:
+  # Image file containing the map, must be a PNG file
+  # If path starts with slash (/) it's considered to be absolute,
+  # otherwise relative to the config directory
+  map_file: map.png
+  # Resolution of the map; meters per pixel
+  resolution: 0.05
+
+  # The 2-D pose of the lower-left pixel in the map, as (x, y, yaw),
+  # with yaw as counterclockwise rotation (yaw=0 means no rotation)
+  # around Z axis. Many parts of the system currently ignore yaw.; m
+  origin_x: -0.05
+  origin_y: -0.05
+  origin_theta: 0.0
+
+  # Pixels with occupancy probability greater than this threshold are
+  # considered completely occupied. Occupancy probability is the
+  # luminance value divided by 255.
+  occupied_threshold: 0.8
+
+  # Pixels with occupancy probability less than this threshold are
+  # considered completely free
+  free_threshold: 0.2
+
+  # Laser Minimum Range, beams shorter than this are ignored
+  laser_min_range: 0.01
+
+  # Laser Maximum Range, beams longer than this are ignored
+  laser_max_range: 5.6
+
+  # Maximum number of beams to consider
+  max_beams: 60
+
+  # Minimum and maximum number of particles
+  min_particles: 100
+  max_particles: 1000
+
+  # Error
+  kld_err: 0.01
+  kld_z: 0.99
+
+  # Motion model parameters, alph5 is only used for omni-drive model
+  # Expected noise in rotation estimate from rotational component
+  alpha1: 5
+  # Expected noise in rotation estimate from translational component
+  alpha2: 5
+  # Expected noise in translation estimate from translational component
+  alpha3: 0.6
+  # Expected noise in translation estimate from rotational component
+  alpha4: 0.6
+  # Translation-related noise parameter for omni model
+  alpha5: 0.6
+
+  # A priori probabilities for a hit, short, max, or random reading.
+  # Must sum up to 1. For likelihood field model only z_hit and z_rand are used
+  z_hit: 0.95
+  z_short: 0.05
+  z_max: 0.05
+  z_rand: 0.05
+
+  # Sigma of gaussian distribution for hitting a map obstacle
+  sigma_hit: 0.2
+  # Lambda for short readings
+  lambda_short: 0.1
+
+  # Maximum discovery distance for likelihood field model
+  laser_likelihood_max_dist: 2.5
+
+  # Laser model type, must be beam or likelihood_field
+  laser_model_type: likelihood_field
+
+  # Odometry model type, must be diff or omni
+  odom_model_type: omni
+
+  # Thresholds for considering laser updates to update particle filter.
+  # If any of the conditions is met the particle filter is updated.
+  # Minimum distance odometry must change; m
+  d_thresh: 0.1
+  # Minimum angle odometry must change; rad
+  a_thresh: 0.05
+  # Time to keep updating after motion has stopped; sec
+  t_thresh: 10.0
+
+  # Laser blackboard interface ID
+  laser_interface_id: Laser urg filtered
+  # Pose blackboard interface ID
+  pose_interface_id: Pose
+
+  # Coordinate frame IDs
+  odom_frame_id: !frame odom
+  base_frame_id: !frame base_link
+  global_frame_id: !frame map
+  laser_frame_id: !frame base_laser
+
+  # Laser angle increment between two consecutive beams
+  angle_increment: 1.0
+
+  # Resampling module interval
+  resample_interval: 4
+
+  # Transform tolerance time; sec
+  transform_tolerance: 3.0
+
+  # Whether to use latest available odom->base_link transform.
+  # If set to false, the transform matching the laser data timestamp is used
+  # instead.
+  use_latest_odom: false
+
+  # Recovery alpha values for robustness against kidnapping.
+  # Good valus are 0.001 and 0.01.
+  alpha_slow: 0.0
+  alpha_fast: 0.0
+
+  # Initial pose (x, y, yaw)
+  init_pose_x: 0.5
+  init_pose_y: 0.5
+  init_pose_a: 0.0
+
+  # Set to true to read the initial covariance from the config file.
+  # Otherwise initialize to sensible uncertainty as default.
+  # If position saving to config is enabled (save_pose_period > 0.0)
+  # you most likely do _not_ want this and set this to false.
+  read_init_cov: false
+
+  # Period (in sec) in which to save the current position as initial
+  # position to the host config. Set to 0.0 to disable.
+  save_pose_period: 2.0
+
+  buffering:
+    # Set to true to enable buffering of data if it cannot be currently
+    # transformed. In that case we use the previous data with proper
+    # transforms available (in particular odometry). This problem arises
+    # in particular if laser data is newer than odometry data.
+    enable: true
+
+    # Enable to get log messages about buffering of data, can sometimes be
+    # helpful to debug buffering issues or to check if data is used at all
+    debug: false
+
+  ros:
+    # Enable ROS integration?
+    # If enabled, the map, a pose array, and the pose are published
+    # on ROS topics and an initial pose topic will be created to accept
+    # new initial pose estimates.
+    # Obviously, ROS support can only be enabled if ROS was available
+    # at compile time. Additionally, this feature requires the ros
+    # plugin to be loaded (or to be run as rosfawkes)
+    enable: false
+
+  # Parameters for fake laser generation
+  map-lasergen:
+    # Generate laser data for the current position, if set to false use
+    # position configured in pos_x/y/theta, otherwise use location from
+    # given pose interface
+    use_current_pos: false
+
+    # Position for which to generate laser data
+    # Ignored if use_current_pos is set to true
+    pos_x: 0.8
+    pos_y: 0.8
+    pos_theta: 0.0
+
+    # Add gaussian noise to laser distances? If yes, what sigma?
+    add_gaussian_noise: true
+    noise_sigma: 0.02
+
+    # Should the plugin send (fake) zero odometry?
+    # You most likely want to set this to false if use_current_pos is true
+    send_zero_odom: true
+
+    # ID of interface to write laser data to
+    laser_interface_id: Map Laser
+
+    # Interface to read pose information from if use_current_pose is true
+    pose_interface_id: Pose

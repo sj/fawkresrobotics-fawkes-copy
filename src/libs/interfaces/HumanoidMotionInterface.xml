@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE interface SYSTEM "interface.dtd">
+<interface name="HumanoidMotionInterface" author="Tim Niemueller" year="2008">
+  <constants>
+    <enum name="LegEnum">
+      <comment>Type to determinate leg side.</comment>
+      <item name="LEG_LEFT">Left leg.</item>
+      <item name="LEG_RIGHT">Right leg.</item>
+    </enum>
+    <enum name="StandupEnum">
+      <comment>From which position to standup.</comment>
+      <item name="STANDUP_DETECT">Detect via accelerometer.</item>
+      <item name="STANDUP_BACK">Standup from lying on the back.</item>
+      <item name="STANDUP_FRONT">Standup from lying on the tummy.</item>
+    </enum>
+  </constants>
+  <data>
+    <comment>
+      This interface provides acces to basic humanoid motion patterns.
+    </comment>
+
+    <field type="bool" name="moving">True if the robot is moving.</field>
+    <field type="bool" name="arms_enabled">
+      If true the arms are controlled during walking for balancing.
+    </field>
+
+    <field type="uint32" name="msgid">
+      The ID of the message that is currently being
+      processed, or 0 if no message is being processed.
+    </field>
+  </data>
+
+  <message name="Stop">
+    <comment>Stop as soon as possible.</comment>
+  </message>
+  <message name="WalkStraight">
+    <comment>Orders the robot to walk on a straight line.</comment>
+    <field type="float" name="distance">Distance in m to walk.</field>
+  </message>
+  <message name="WalkSideways">
+    <comment>Walk sideways (strafe).</comment>
+    <field type="float" name="distance">Distance in m to walk.</field>
+  </message>
+  <message name="WalkArc">
+    <comment>Orders the robot to walk on an arc.</comment>
+    <field type="float" name="angle">Angle in radians to turn over the way.</field>
+    <field type="float" name="radius">Radius in m of the circle in m.</field>
+  </message>
+  <message name="WalkVelocity">
+    <comment>
+      Orders the robot to walk with the given velocities. This is used
+      for an omni-directional walk. It will stop if all velocities are 0.
+    </comment>
+    <field type="float" name="x">
+      Fraction of MaxStepX. Use negative for backwards. [-1.0 to 1.0].
+    </field>
+    <field type="float" name="y">
+      Fraction of MaxStepY. Use negative for right. [-1.0 to 1.0].
+    </field>
+    <field type="float" name="theta">
+      Fraction of MaxStepTheta. Use negative for clockwise [-1.0 to 1.0].
+    </field>
+    <field type="float" name="speed">
+      Fraction of MaxStepFrequency [0.0 to 1.0].
+    </field>
+  </message>
+  <message name="Turn">
+    <comment>Orders the robot to turn on the current position.</comment>
+    <field type="float" name="angle">Angle in radians to turn.</field>
+  </message>
+  <message name="Kick">
+    <comment>
+      Kick with a robot's leg, for instance a ball.
+    </comment>
+    <field type="LegEnum" name="leg">Leg to kick with</field>
+    <field type="float" name="strength">Kick strength</field>
+  </message>
+  <message name="Park">
+    <comment>
+      Bring robot into a park position where it is safe to turn servos off.
+    </comment>
+  </message>
+  <message name="GetUp">
+    <comment>Bring robot into a standing position when in park position.</comment>
+  </message>
+  <message name="Standup">
+    <comment>Bring robot into a standing position when lying on the ground.</comment>
+    <field type="StandupEnum" name="from_pos">Position from where to standup.</field>
+  </message>
+  <message name="MoveHead">
+    <comment>Set head's pan/tilt to the given values..</comment>
+    <field type="float" name="yaw">Desired yaw (horizontal orientation).</field>
+    <field type="float" name="pitch">Desired pitch (vertical orientation).</field>
+    <field type="float" name="speed">Maximum speed in [0.0..1.0].</field>
+  </message>
+</interface>
