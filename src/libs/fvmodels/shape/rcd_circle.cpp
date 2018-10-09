@@ -353,7 +353,7 @@ void RcdCircleModel::calcCircle(
 // this function calculates the center and radius
 // of the circle that is determined
 {
-  const int &x1=p1.x, &y1=p1.y, &x2=p2.x, &y2=p2.y, &x3=p3.x, &y3=p3.y;
+  const int x1=p1.x, y1=p1.y, x2=p2.x, y2=p2.y, x3=p3.x, y3=p3.y;
   float dx, dy;
   int div = 2*((x2-x1)*(y3-y1)-(x3-x1)*(y2-y1));
 
